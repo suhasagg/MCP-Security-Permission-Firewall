@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: mcp-firewall}
+spec:
+  replicas: 3
+  selector: {matchLabels: {app: mcp-firewall}}
+  template:
+    metadata: {labels: {app: mcp-firewall}}
+    spec:
+      securityContext: {runAsNonRoot: true}
+      containers:
+      - name: firewall
+        image: mcp-firewall:1.0.0
+        ports: [{containerPort: 8120}]
+        livenessProbe: {httpGet: {path: /health/live,port: 8120}}
+        readinessProbe: {httpGet: {path: /health/live,port: 8120}}
+        resources:
+          requests: {cpu: "250m",memory: "256Mi"}
+          limits: {cpu: "2",memory: "1Gi"}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: mcp-firewall}
+spec:
+  selector: {app: mcp-firewall}
+  ports: [{port: 80,targetPort: 8120}]
